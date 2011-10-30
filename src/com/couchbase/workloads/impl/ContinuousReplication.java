@@ -1,69 +1,56 @@
 package com.couchbase.workloads.impl;
 
-import org.ektorp.DbAccessException;
-import org.ektorp.ReplicationCommand;
-import org.ektorp.ReplicationStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
-import com.couchbase.workloads.CouchbaseWorkload;
-import com.couchbase.workloads.WorkloadHelper;
-
-public class ContinuousReplication extends CouchbaseWorkload {
-
-    private final static Logger LOG = LoggerFactory
-            .getLogger(ContinuousReplication.class);
-
-    private String workloadDb = WorkloadHelper.DEFAULT_WORKLOAD_DB;
+public class ContinuousReplication extends AbstractReplication {
 
     @Override
-    protected String performWork() {
+    protected boolean shouldPullFromCloud() {
+        return true;
+    }
 
-        if(extras.containsKey(WorkloadHelper.EXTRA_WORKLOAD_DB)) {
-            workloadDb = (String)extras.get(WorkloadHelper.EXTRA_WORKLOAD_DB);
-        }
+    @Override
+    protected boolean shouldPushToCloud() {
+        return true;
+    }
 
-        ReplicationCommand pullReplicationCommand = new ReplicationCommand.Builder()
-        .source(workloadRunner.getWorkloadReplicationUrl())
-        .target(workloadDb)
-        .continuous(true)
-        .build();
+    @Override
+    protected boolean shouldPullContinuously() {
+        return true;
+    }
 
-        LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Starting Continuous Pull Replication");
-        ReplicationStatus pullStatus;
-        try {
-            pullStatus = couchDbInstance.replicate(pullReplicationCommand);
-            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Finished Replication: " + pullStatus.isOk());
-        } catch (DbAccessException e) {
-            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Replication Error: ", e);
-        }
+    @Override
+    protected boolean shouldPushContinuously() {
+        return true;
+    }
 
-        ReplicationCommand pushReplicationCommand = new ReplicationCommand.Builder()
-        .source(workloadDb)
-        .target(workloadRunner.getWorkloadReplicationUrl())
-        .continuous(true)
-        .build();
+    @Override
+    protected long intervalBetweenPull() {
+        return 30 * 1000;
+    }
 
-        LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Starting Continuous Push Replication");
-        ReplicationStatus pushStatus;
-        try {
-            pushStatus = couchDbInstance.replicate(pushReplicationCommand);
-            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Finished Replication: " + pushStatus.isOk());
-        } catch (DbAccessException e) {
-            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Replication Error: ", e);
-        }
+    @Override
+    protected long intervalBetweenPush() {
+        return 30 * 1000;
+    }
 
-        while(!thread.isCancelled()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-              //ignore
-            }
-        }
+    @Override
+    protected String pullFilterFunction() {
+        return null;
+    }
 
-        return "Continuous Replication Workload was cancelled";
+    @Override
+    protected String pushFilterFunction() {
+        return null;
+    }
 
+    @Override
+    protected Object pullQueryParams() {
+        return null;
+    }
+
+    @Override
+    protected Object pushQueryParams() {
+        return null;
     }
 
     @Override

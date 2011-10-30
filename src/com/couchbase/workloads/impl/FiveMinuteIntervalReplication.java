@@ -1,10 +1,56 @@
 package com.couchbase.workloads.impl;
 
 
-public class FiveMinuteIntervalReplication extends IntervalReplication {
+public class FiveMinuteIntervalReplication extends AbstractReplication {
 
-    protected int getInterval() {
-        return 1000 * 60 * 5;
+    @Override
+    protected boolean shouldPullFromCloud() {
+        return true;
+    }
+
+    @Override
+    protected boolean shouldPushToCloud() {
+        return true;
+    }
+
+    @Override
+    protected boolean shouldPullContinuously() {
+        return false;
+    }
+
+    @Override
+    protected boolean shouldPushContinuously() {
+        return false;
+    }
+
+    @Override
+    protected long intervalBetweenPull() {
+        return 1 * 60 * 1000;
+    }
+
+    @Override
+    protected long intervalBetweenPush() {
+        return 1 * 60 * 1000;
+    }
+
+    @Override
+    protected String pullFilterFunction() {
+        return null;
+    }
+
+    @Override
+    protected String pushFilterFunction() {
+        return null;
+    }
+
+    @Override
+    protected Object pullQueryParams() {
+        return null;
+    }
+
+    @Override
+    protected Object pushQueryParams() {
+        return null;
     }
 
     @Override

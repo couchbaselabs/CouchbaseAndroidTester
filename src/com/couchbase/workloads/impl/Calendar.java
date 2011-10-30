@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Random;
 
 import com.couchbase.workloads.CouchbaseWorkload;
+import com.couchbase.workloads.WorkloadHelper;
 
 public class Calendar extends CouchbaseWorkload {
 
@@ -23,7 +24,7 @@ public class Calendar extends CouchbaseWorkload {
 
             //wait
             try {
-                int delayBetweenPosts = 1000 * (500 + new Random().nextInt(500));
+                int delayBetweenPosts = 100 * (500 + new Random().nextInt(500));
                 Thread.sleep(delayBetweenPosts);
             } catch (InterruptedException e) {
                 //ignore
@@ -36,7 +37,7 @@ public class Calendar extends CouchbaseWorkload {
 
             //wait some more
             try {
-                int delayBetweenPosts = 1000 * (500 + new Random().nextInt(500));
+                int delayBetweenPosts = 100 * (500 + new Random().nextInt(500));
                 Thread.sleep(delayBetweenPosts);
             } catch (InterruptedException e) {
                 //ignore
@@ -82,6 +83,8 @@ public class Calendar extends CouchbaseWorkload {
 
         HashMap<String, Object> result = new HashMap<String, Object>();
         result.put("data", data);
+        result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
+        result.put("friends", workloadRunner.getRandomFriends(2));
         return result;
     }
 

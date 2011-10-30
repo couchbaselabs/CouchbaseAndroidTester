@@ -1,2 +1,5 @@
 http://127.0.0.1:5984/device1
 http://127.0.0.1:5984/device2
+http://127.0.0.1:5984/device3
+http://127.0.0.1:5984/device4
+http://127.0.0.1:5984/device5

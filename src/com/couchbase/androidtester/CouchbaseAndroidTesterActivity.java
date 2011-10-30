@@ -2,6 +2,8 @@ package com.couchbase.androidtester;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
@@ -298,6 +300,37 @@ public class CouchbaseAndroidTesterActivity extends Activity implements Couchbas
     @Override
     public void publishedWorkloadDocumentWithIdandRevision(String id, String rev) {
         //the android runner does not currently use this mechanism
+        throw new UnsupportedOperationException("Not supported on Android at this time");
     }
 
+
+    @Override
+    public HttpClient buildHttpClientFromUrl(String urlString) throws MalformedURLException {
+
+        URL url = new URL(urlString);
+        String host = url.getHost();
+        int port = url.getPort();
+        if(port < 0) {
+            port = 80;
+        }
+
+        return new AndroidHttpClient.Builder().host(host).port(port).build();
+    }
+
+    @Override
+    public String getDatabaseNameFromUrl(String urlString) throws MalformedURLException {
+
+        URL url = new URL(urlString);
+        String path = url.getPath();
+        if(path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        return path;
+    }
+
+    @Override
+    public List<String> getRandomFriends(int count) {
+        throw new UnsupportedOperationException("Not supported on Android at this time");
+    }
 }

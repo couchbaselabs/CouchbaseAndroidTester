@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 import com.couchbase.workloads.CouchbaseWorkload;
+import com.couchbase.workloads.WorkloadHelper;
 
 public class CRUDDocuments extends CouchbaseWorkload {
 
@@ -22,12 +23,12 @@ public class CRUDDocuments extends CouchbaseWorkload {
 		while(!thread.isCancelled()) {
 
 			//create
-			HashMap<String, String> document = documentTemplate();
+			Map<String, Object> document = documentTemplate();
 			couchDbConnector.create(document);
 			workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)document.get("_id"), (String)document.get("_rev"));
 			documentsCreated++;
 
-			String documentId = document.get("_id");
+			String documentId = (String)document.get("_id");
 			LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Document created got id " + documentId);
 
 			//read
@@ -59,9 +60,11 @@ public class CRUDDocuments extends CouchbaseWorkload {
 		return resultMessage;
 	}
 
-	protected HashMap<String, String> documentTemplate() {
-		HashMap<String, String> result = new HashMap<String, String>();
+	protected Map<String, Object> documentTemplate() {
+		HashMap<String, Object> result = new HashMap<String, Object>();
 		result.put("type", "sample");
+        result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
+        result.put("friends", workloadRunner.getRandomFriends(2));
 		return result;
 	}
 

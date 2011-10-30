@@ -14,6 +14,7 @@ public class WorkloadHelper {
             .getLogger(WorkloadHelper.class);
 
     public static final String EXTRA_WORKLOAD_DB = "WORKLOAD_DB";
+    public static final String EXTRA_NODE_ID = "NODE_ID";
 
     public static final String DEFAULT_WORKLOAD_DB = "workload";
 

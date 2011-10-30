@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 import com.couchbase.workloads.CouchbaseWorkload;
+import com.couchbase.workloads.WorkloadHelper;
 
 public class PhotoShare extends CouchbaseWorkload {
 
@@ -114,6 +115,8 @@ public class PhotoShare extends CouchbaseWorkload {
         HashMap<String, Object> result = new HashMap<String, Object>();
         result.put("mediaMetaData", media);
         result.put("motionData", motionData);
+        result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
+        result.put("friends", workloadRunner.getRandomFriends(2));
         return result;
     }
 

@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
@@ -39,6 +40,7 @@ public class JavaTester implements CouchbaseWorkloadRunner {
     private static final String TAG = "JavaTester";
 
     private List<CouchbaseWorkload> workloads = new ArrayList<CouchbaseWorkload>();
+    private List<String> nodeUrls = new ArrayList<String>();
     private String workloadReplicaitonUrl;
     private String logReplicationUrl;
     private Map<String, String> changeIdRevisions = new HashMap<String,String>();
@@ -125,20 +127,12 @@ public class JavaTester implements CouchbaseWorkloadRunner {
 
             public void run() {
                 try {
-                    URL url = new URL(getWorkloadReplicationUrl());
-                    String host = url.getHost();
-                    int port = url.getPort();
-                    if(port < 0) {
-                        port = 80;
-                    }
-                    String path = url.getPath();
-                    if(path.startsWith("/")) {
-                        path = path.substring(1);
-                    }
 
-                    HttpClient httpClient = new StdHttpClient.Builder().host(host).port(port).build();
+                    String urlString = getWorkloadReplicationUrl();
+
+                    HttpClient httpClient = buildHttpClientFromUrl(urlString);
                     CouchDbInstance couchDbInstance = new StdCouchDbInstance(httpClient);
-                    CouchDbConnector couchDbConnector = couchDbInstance.createConnector(path, false);
+                    CouchDbConnector couchDbConnector = couchDbInstance.createConnector(getDatabaseNameFromUrl(urlString), false);
 
                     DbInfo dbInfo = couchDbConnector.getDbInfo();
                     long lastUpdateSeq = dbInfo.getUpdateSeq();
@@ -181,25 +175,19 @@ public class JavaTester implements CouchbaseWorkloadRunner {
         String str;
         while ((str = stdin.readLine()) != null) {
             //expect each line to be a URL
+            nodeUrls.add(str);
+        }
 
-            URL url = new URL(str);
-            String host = url.getHost();
-            int port = url.getPort();
-            if(port < 0) {
-                port = 80;
-            }
-            String path = url.getPath();
-            if(path.startsWith("/")) {
-                path = path.substring(1);
-            }
+        for (String nodeUrl : nodeUrls) {
 
-            HttpClient httpClient = new StdHttpClient.Builder().host(host).port(port).build();
+            HttpClient httpClient = buildHttpClientFromUrl(nodeUrl);
             CouchDbInstance couchDbInstance = new StdCouchDbInstance(httpClient);
-            if(path == null || path.equals("")) {
-                path = WorkloadHelper.DEFAULT_WORKLOAD_DB;
-            }
 
-            CouchDbConnector couchDbConnector = couchDbInstance.createConnector(path, true);
+            String dbName = getDatabaseNameFromUrl(nodeUrl);
+            if(dbName == null || dbName.equals("")) {
+                dbName = WorkloadHelper.DEFAULT_WORKLOAD_DB;
+            }
+            CouchDbConnector couchDbConnector = couchDbInstance.createConnector(dbName, true);
 
 
             for(String workloadName : startWorkloads) {
@@ -207,13 +195,13 @@ public class JavaTester implements CouchbaseWorkloadRunner {
                 workload.setCouchDbInstance(couchDbInstance);
                 workload.setCouchDbConnector(couchDbConnector);
                 workload.setCouchbaseWorkloadRunner(this);
-                workload.addExtra(WorkloadHelper.EXTRA_WORKLOAD_DB, path);
+                workload.addExtra(WorkloadHelper.EXTRA_WORKLOAD_DB, dbName);
+                workload.addExtra(WorkloadHelper.EXTRA_NODE_ID, nodeUrl);
                 LOG.debug(TAG, "Starting workload " + workload.getName());
                 workload.start();
                 //add to our list
                 workloads.add(workload);
             }
-
         }
 
         //wait for all workloads to finish (they never will)
@@ -271,6 +259,45 @@ public class JavaTester implements CouchbaseWorkloadRunner {
                 result = changeIdTimestamps.remove(id);
             }
         }
+        return result;
+    }
+
+    @Override
+    public HttpClient buildHttpClientFromUrl(String urlString) throws MalformedURLException {
+
+        URL url = new URL(urlString);
+        String host = url.getHost();
+        int port = url.getPort();
+        if(port < 0) {
+            port = 80;
+        }
+
+        return new StdHttpClient.Builder().host(host).port(port).build();
+    }
+
+    @Override
+    public String getDatabaseNameFromUrl(String urlString) throws MalformedURLException {
+
+        URL url = new URL(urlString);
+        String path = url.getPath();
+        if(path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        return path;
+    }
+
+    @Override
+    public List<String> getRandomFriends(int count) {
+        //NOTE currently no attempt is made to avoid adding the same friend multiple times
+        List<String> result = new ArrayList<String>();
+
+        Random r = new Random();
+        while(result.size() < count) {
+            int randomIndex = r.nextInt(nodeUrls.size());
+            result.add(nodeUrls.get(randomIndex));
+        }
+
         return result;
     }
 
