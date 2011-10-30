@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JavaTester" default="help">
+
+  <target name="_init">
+    <mkdir dir="bin"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="bin"/>
+  </target>
+
+  <target name="compile" depends="_init">
+    <javac srcdir="src" destdir="bin" excludes="com/couchbase/androidtester/**">
+  <classpath>
+      <fileset dir="libs">
+        <include name="**/*.jar"/>
+        <exclude name="**/*android*.jar"/>
+      </fileset>
+      <fileset dir="javalibs">
+        <include name="**/*.jar"/>
+      </fileset>
+  </classpath>
+
+    </javac>
+  </target>
+
+</project>
