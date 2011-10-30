@@ -9,7 +9,6 @@ import org.ektorp.AttachmentInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 import com.couchbase.workloads.CouchbaseWorkload;
 import com.couchbase.workloads.WorkloadHelper;
 
@@ -42,7 +41,7 @@ public class PhotoShare extends CouchbaseWorkload {
                 photosUploaded++;
                 //task.publishWorkProgress("Uploaded Photo " + photosUploaded);
             } catch (IOException e) {
-                LOG.error(CouchbaseAndroidTesterActivity.TAG, "Error reading attachment", e);
+                LOG.error("Error reading attachment", e);
             }
 
             try {

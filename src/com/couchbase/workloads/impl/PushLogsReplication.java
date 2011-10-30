@@ -6,8 +6,8 @@ import org.ektorp.ReplicationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 import com.couchbase.workloads.CouchbaseWorkload;
+import com.couchbase.workloads.WorkloadHelper;
 
 public class PushLogsReplication extends CouchbaseWorkload {
 
@@ -18,18 +18,18 @@ public class PushLogsReplication extends CouchbaseWorkload {
     protected String performWork() {
 
         ReplicationCommand pushReplicationCommand = new ReplicationCommand.Builder()
-        .source(CouchbaseAndroidTesterActivity.TEST_RESULTS_DB)
+        .source(WorkloadHelper.TEST_RESULTS_DB)
         .target(workloadRunner.getLogsReplicationUrl())
         .continuous(true)
         .build();
 
-        LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Starting Continuous Push Replication of Logs");
+        LOG.debug("Starting Continuous Push Replication of Logs");
         ReplicationStatus pushStatus;
         try {
             pushStatus = couchDbInstance.replicate(pushReplicationCommand);
-            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Finished Replication of Logs: " + pushStatus.isOk());
+            LOG.debug("Finished Replication of Logs: " + pushStatus.isOk());
         } catch (DbAccessException e) {
-            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Replication of Logs Error: ", e);
+            LOG.debug("Replication of Logs Error: ", e);
         }
 
         while(!thread.isCancelled()) {

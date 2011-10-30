@@ -44,8 +44,6 @@ public class CouchbaseAndroidTesterActivity extends Activity implements Couchbas
 
 	public static final String TAG = "CouchbaseTester";
 
-	public static final String TEST_RESULTS_DB = "test-results";
-
 	/**
 	 * List of monitors
 	 */
@@ -179,7 +177,7 @@ public class CouchbaseAndroidTesterActivity extends Activity implements Couchbas
                 @Override
                 protected void doInBackground() {
                     couchDbConnector = couchDbInstance.createConnector(WorkloadHelper.DEFAULT_WORKLOAD_DB, true);
-                    couchDbConnectorResults = couchDbInstance.createConnector(TEST_RESULTS_DB, true);
+                    couchDbConnectorResults = couchDbInstance.createConnector(WorkloadHelper.TEST_RESULTS_DB, true);
                 }
 
                 @Override

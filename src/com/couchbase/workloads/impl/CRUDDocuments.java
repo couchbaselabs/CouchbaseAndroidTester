@@ -7,7 +7,6 @@ import org.ektorp.UpdateConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 import com.couchbase.workloads.CouchbaseWorkload;
 import com.couchbase.workloads.WorkloadHelper;
 
@@ -29,7 +28,7 @@ public class CRUDDocuments extends CouchbaseWorkload {
 			documentsCreated++;
 
 			String documentId = (String)document.get("_id");
-			LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Document created got id " + documentId);
+			LOG.debug("Document created got id " + documentId);
 
 			//read
 			@SuppressWarnings("unchecked")
@@ -40,7 +39,7 @@ public class CRUDDocuments extends CouchbaseWorkload {
 			try {
 				couchDbConnector.update(documentRead);
 			} catch (UpdateConflictException e) {
-			    LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Update Conflict", e);
+			    LOG.debug("Update Conflict", e);
 			}
 			workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)documentRead.get("_id"), (String)documentRead.get("_rev"));
 

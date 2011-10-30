@@ -6,7 +6,6 @@ import org.ektorp.ReplicationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 import com.couchbase.workloads.CouchbaseWorkload;
 import com.couchbase.workloads.WorkloadHelper;
 
@@ -49,13 +48,13 @@ public abstract class AbstractReplication extends CouchbaseWorkload {
 
                         ReplicationCommand pushReplicationCommand = pushReplicationCommandBuilder.build();
 
-                        LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Starting Push Replication");
+                        LOG.debug("Starting Push Replication");
                         ReplicationStatus pushStatus;
                         try {
                             pushStatus = couchDbInstance.replicate(pushReplicationCommand);
-                            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Finished Replication: " + pushStatus.isOk());
+                            LOG.debug("Finished Replication: " + pushStatus.isOk());
                         } catch (DbAccessException e) {
-                            LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Replication Error: ", e);
+                            LOG.debug("Replication Error: ", e);
                         }
 
                         try {
@@ -86,13 +85,13 @@ public abstract class AbstractReplication extends CouchbaseWorkload {
 
                 ReplicationCommand pullReplicationCommand = pullReplicationCommandBuilder.build();
 
-                LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Starting Pull Replication");
+                LOG.debug("Starting Pull Replication");
                 ReplicationStatus pullStatus;
                 try {
                     pullStatus = couchDbInstance.replicate(pullReplicationCommand);
-                    LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Finished Replication: " + pullStatus.isOk());
+                    LOG.debug("Finished Replication: " + pullStatus.isOk());
                 } catch (DbAccessException e) {
-                    LOG.debug(CouchbaseAndroidTesterActivity.TAG, "Replication Error: ", e);
+                    LOG.debug("Replication Error: ", e);
                 }
 
                 try {

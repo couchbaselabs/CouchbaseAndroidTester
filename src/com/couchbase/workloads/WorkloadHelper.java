@@ -6,8 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
-
 public class WorkloadHelper {
 
     private final static Logger LOG = LoggerFactory
@@ -20,6 +18,8 @@ public class WorkloadHelper {
 
     public static final String DEFAULT_WORKLOAD_SYNC_URL = "http://mschoch.ic.ht/android";
     public static final String DEFAULT_LOGS_SYNC_URL = "http://mschoch.ic.ht/android-logs";
+
+    public static final String TEST_RESULTS_DB = "test-results";
 
     /**
      * List of workload classes
@@ -49,7 +49,7 @@ public class WorkloadHelper {
 			    CouchbaseWorkload cw = loadWorkload(workloadClassName);
 				workloads.add(cw);
 			} catch (Exception e) {
-				LOG.error(CouchbaseAndroidTesterActivity.TAG, "Exception loading monitors", e);
+				LOG.error("Exception loading monitors", e);
 			}
 		}
 
