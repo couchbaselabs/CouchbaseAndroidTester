@@ -25,12 +25,12 @@ public class FiveMinuteIntervalReplication extends AbstractReplication {
 
     @Override
     protected long intervalBetweenPull() {
-        return 1 * 60 * 1000;
+        return 1 * 60 * 5000;
     }
 
     @Override
     protected long intervalBetweenPush() {
-        return 1 * 60 * 1000;
+        return 1 * 60 * 5000;
     }
 
     @Override
