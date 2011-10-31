@@ -60,6 +60,7 @@ NOTE: the single command-line argument accepted is a comma-delimited list of wor
 
 ### Output
 
+<pre>
 Workload Sync URL: http://127.0.0.1:5984/android-other
 Minimum Delay: 100
 Number of Friends: 5
@@ -71,6 +72,7 @@ Starting Workloads: com.couchbase.workloads.impl.Calendar,com.couchbase.workload
 9f5df4dc-004f-4592-b6b4-5f387b666022,62,1470,436,143,19,294
 129ea10c-e651-4dbf-b860-de019aa19432,974,26,1884,2179,1278,1115
 421b2dd8-c711-47b0-ae27-29cd6caf5ef7,322,1230,1853,644,28,454
+</pre>
 
 Any of the settings overridden on the command-line and the list of workloads that will be started are sent to standard output.
 
