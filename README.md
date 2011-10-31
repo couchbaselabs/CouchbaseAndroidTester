@@ -7,6 +7,23 @@ dependency not included in the project source tree.  Please follow the instructi
 http://www.couchbase.org/get/couchbase-mobile-for-android/current to get and install the latest
 version of Couchbase Mobile for Android.
 
+## Building
+
+By default Eclipse with the Android ADT Plugin installed will build both the Android and Java tester classes.
+
+To build the Android tester application from the command-line:
+
+    ant -Dsdk.dir=<android.sdk.path> debug
+
+To build the Java tester application from the command-line:
+
+    ant -f java_build.xml compile
+
+To clean build artifacts:
+
+    ant -Dsdk.dir=<android.sdk.path> clean
+    ant -f java_build.xml clean
+
 ## Running workloads from an Android device through the UI
 
 The simplest way to start workloads is by pressing the Start button from the workloads tab in the UI.
