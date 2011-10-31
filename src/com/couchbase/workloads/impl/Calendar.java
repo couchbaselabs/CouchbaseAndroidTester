@@ -3,6 +3,7 @@ package com.couchbase.workloads.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import com.couchbase.workloads.CouchbaseWorkload;
 import com.couchbase.workloads.WorkloadHelper;
@@ -28,14 +29,15 @@ public class Calendar extends CouchbaseWorkload {
         while(!thread.isCancelled()) {
 
             //create a calendar item
-            Map<String,Object> document = documentTemplate();
+            String id = UUID.randomUUID().toString();
+            Map<String,Object> document = documentTemplate(id);
+            workloadRunner.publishedWorkloadDocumentWithIdandRevision(id, "1");
             couchDbConnector.create(document);
-            workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)document.get("_id"), (String)document.get("_rev"));
             calendarEventsCreated++;
 
             //wait
             try {
-                int delayBetweenPosts = 1000 * (minimumDelay + new Random().nextInt(minimumDelay));
+                int delayBetweenPosts = (minimumDelay + new Random().nextInt(minimumDelay));
                 Thread.sleep(delayBetweenPosts);
             } catch (InterruptedException e) {
                 //ignore
@@ -43,12 +45,13 @@ public class Calendar extends CouchbaseWorkload {
 
             //update the calendar item
             document = cancelEvent(document);
+            workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)document.get("_id"), "2");
             couchDbConnector.update(document);
-            workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)document.get("_id"), (String)document.get("_rev"));
+
 
             //wait some more
             try {
-                int delayBetweenPosts = 1000 * (minimumDelay + new Random().nextInt(minimumDelay));
+                int delayBetweenPosts = (minimumDelay + new Random().nextInt(minimumDelay));
                 Thread.sleep(delayBetweenPosts);
             } catch (InterruptedException e) {
                 //ignore
@@ -78,7 +81,7 @@ public class Calendar extends CouchbaseWorkload {
         return document;
     }
 
-    protected HashMap<String, Object> documentTemplate() {
+    protected HashMap<String, Object> documentTemplate(String id) {
         HashMap<String, Object> when = new HashMap<String, Object>();
         when.put("start", "2010-04-17T15:00:00.000Z");
         when.put("end", "2010-04-17T17:00:00.000Z");
@@ -93,6 +96,7 @@ public class Calendar extends CouchbaseWorkload {
         data.put("when", when);
 
         HashMap<String, Object> result = new HashMap<String, Object>();
+        result.put("_id", id);
         result.put("data", data);
         result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
         result.put("friends", workloadRunner.getRandomFriends((String)extras.get(WorkloadHelper.EXTRA_NODE_ID), numFriends));

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import org.ektorp.AttachmentInputStream;
 import org.slf4j.Logger;
@@ -34,11 +35,13 @@ public class PhotoShare extends CouchbaseWorkload {
         int photosUploaded = 0;
         while(!thread.isCancelled()) {
 
-            Map<String,Object> document = documentTemplate();
+            String id = UUID.randomUUID().toString();
+            Map<String,Object> document = documentTemplate(id);
+            workloadRunner.publishedWorkloadDocumentWithIdandRevision(id, "1");
             couchDbConnector.create(document);
-            String id = (String)document.get("_id");
+//            String id = (String)document.get("_id");
             String rev = (String)document.get("_rev");
-            workloadRunner.publishedWorkloadDocumentWithIdandRevision(id, rev);
+
 
             String filename = "small.jpg";
             if(photosUploaded % 2 == 0) {
@@ -47,8 +50,8 @@ public class PhotoShare extends CouchbaseWorkload {
 
             try {
                 AttachmentInputStream ais = new AttachmentInputStream(filename, workloadRunner.openResource("attachments/images/" + filename), "image/jpeg");
+                workloadRunner.publishedWorkloadDocumentWithIdandRevision(id, "2");
                 rev = couchDbConnector.createAttachment(id, rev, ais);
-                workloadRunner.publishedWorkloadDocumentWithIdandRevision(id, rev);
                 photosUploaded++;
                 //task.publishWorkProgress("Uploaded Photo " + photosUploaded);
             } catch (IOException e) {
@@ -56,7 +59,7 @@ public class PhotoShare extends CouchbaseWorkload {
             }
 
             try {
-                int delayBetweenPosts = 1000 * (minimumDelay + new Random().nextInt(minimumDelay));
+                int delayBetweenPosts = (minimumDelay + new Random().nextInt(minimumDelay));
                 Thread.sleep(delayBetweenPosts);
             } catch (InterruptedException e) {
                 //ignore
@@ -79,7 +82,7 @@ public class PhotoShare extends CouchbaseWorkload {
     }
 
 
-    protected HashMap<String, Object> documentTemplate() {
+    protected HashMap<String, Object> documentTemplate(String id) {
         HashMap<String, Object> exif = new HashMap<String, Object>();
         exif.put("ColorSpace", 1);
         exif.put("PixelYDimension", 2048);
@@ -123,6 +126,7 @@ public class PhotoShare extends CouchbaseWorkload {
         media.put("{TIFF}", tiff);
 
         HashMap<String, Object> result = new HashMap<String, Object>();
+        result.put("_id", id);
         result.put("mediaMetaData", media);
         result.put("motionData", motionData);
         result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));

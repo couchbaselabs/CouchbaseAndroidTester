@@ -51,7 +51,9 @@ public class ChangesFeedMonitor extends Thread {
                 DocumentChange change = feed.next();
                 String id = change.getId();
                 String rev = change.getRevision();
-                workloadRunner.recordDeviceSeesDocumentWithIdAndRevision(deviceUrl, id, rev);
+                int dashLocation = rev.indexOf("-");
+                String choppedRev = rev.substring(0, dashLocation);
+                workloadRunner.recordDeviceSeesDocumentWithIdAndRevision(deviceUrl, id, choppedRev);
 
             }
 

@@ -234,7 +234,6 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             //if we were track older revision it will get overwritten
             changeIdRevisions.put(id, rev);
             changeIdTimestamps.put(id, currentTime);
-            changeIdDeviceTimings.put(id, new HashMap<String,Long>());
         }
     }
 
@@ -249,9 +248,13 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             trackedRev = changeIdRevisions.get(documentId);
             if((trackedRev != null) && (trackedRev.equals(revision))) {
                 deviceTimings = changeIdDeviceTimings.get(documentId);
-                if(deviceTimings != null) {
-                    deviceTimings.put(deviceId, currentTime);
+
+                if(deviceTimings == null) {
+                    deviceTimings = new HashMap<String,Long>();
+                    changeIdDeviceTimings.put(documentId, deviceTimings);
                 }
+
+                deviceTimings.put(deviceId, currentTime);
 
                 //we expect to receive num_friends + 1 (for the cloud) entries
                 if(deviceTimings.size() == (numFriends + 1) ) {

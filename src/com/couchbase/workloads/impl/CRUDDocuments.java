@@ -2,6 +2,7 @@ package com.couchbase.workloads.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.ektorp.UpdateConflictException;
 import org.slf4j.Logger;
@@ -28,9 +29,10 @@ public class CRUDDocuments extends CouchbaseWorkload {
 		while(!thread.isCancelled()) {
 
 			//create
-			Map<String, Object> document = documentTemplate();
+		    String id = UUID.randomUUID().toString();
+			Map<String, Object> document = documentTemplate(id);
+			workloadRunner.publishedWorkloadDocumentWithIdandRevision(id, "1");
 			couchDbConnector.create(document);
-			workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)document.get("_id"), (String)document.get("_rev"));
 			documentsCreated++;
 
 			String documentId = (String)document.get("_id");
@@ -47,7 +49,7 @@ public class CRUDDocuments extends CouchbaseWorkload {
 			} catch (UpdateConflictException e) {
 			    LOG.debug("Update Conflict", e);
 			}
-			workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)documentRead.get("_id"), (String)documentRead.get("_rev"));
+			workloadRunner.publishedWorkloadDocumentWithIdandRevision((String)documentRead.get("_id"), "2");
 
 			//delete
 			couchDbConnector.delete(documentRead);
@@ -65,8 +67,9 @@ public class CRUDDocuments extends CouchbaseWorkload {
 		return resultMessage;
 	}
 
-	protected Map<String, Object> documentTemplate() {
+	protected Map<String, Object> documentTemplate(String id) {
 		HashMap<String, Object> result = new HashMap<String, Object>();
+		result.put("_id", id);
 		result.put("type", "sample");
         result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
         result.put("friends", workloadRunner.getRandomFriends((String)extras.get(WorkloadHelper.EXTRA_NODE_ID), numFriends));
