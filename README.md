@@ -77,7 +77,7 @@ Starting Workloads: com.couchbase.workloads.impl.Calendar,com.couchbase.workload
 Any of the settings overridden on the command-line and the list of workloads that will be started are sent to standard output.
 
 Following that the output is comma-delimited with the following fields:
-&gt;document id&lt;, &gt;sync time to cloud&lt;, &gt;sync time to friend 1&lt; ... &gt;sync time to friend n&lt;
+&lt;document id&gt;, &lt;sync time to cloud&gt;, &lt;sync time to friend 1&gt; ... &lt;sync time to friend n&gt;
 
 The number of columns will be 2 + the number of friends tagged in each document.
 
