@@ -34,6 +34,10 @@ The simplest way to start workloads is by pressing the Start button from the wor
 -workload_sync_url &lt;URL to which the workload DB will be synced&gt;
 
 -log_sync_url &lt;URL to which logs will be pushed&gt;
+
+-min_delay &lt;delay in ms, default 500&gt;
+
+-num_friends &lt;number of friends to tag in document, default 2&gt;
     
 NOTE: the single command-line argument accepted is a comma-delimited list of workloads to be run.  A list of CouchDB server URLs must be provided on standard input, 1 URL per line (see the couch_urls.txt file for an example of the format)
 
@@ -48,6 +52,10 @@ NOTE: the single command-line argument accepted is a comma-delimited list of wor
 - Continuous Replication  -  Continuous bi-directional replication of the workload database to the cloud
 
 - Five Minute Interval Replication  -  Non-continuous replication of the workload database at 5 minute intervals
+
+- ContinuousFriendFilterReplication - Continuous replication of all documents from device to cloud, from cloud to device replication is filtered to only include friends tagged in document
+
+- FiveMinuteIntervalFriendFilterReplication - Non-continous replication of the workload database at 5 minute intervals, all documents replicated from device to cloud, from cloud to device replication is filtered to only include friends tagged in document 
 
 ## Provided Monitors
 
