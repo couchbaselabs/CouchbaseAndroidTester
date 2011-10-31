@@ -17,17 +17,13 @@ import java.util.Random;
 
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
-import org.ektorp.DbInfo;
-import org.ektorp.changes.ChangesCommand;
-import org.ektorp.changes.ChangesFeed;
-import org.ektorp.changes.DocumentChange;
 import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.couchbase.util.MovingAverage;
+import com.couchbase.util.ChangesFeedMonitor;
 import com.couchbase.workloads.CouchbaseWorkload;
 import com.couchbase.workloads.CouchbaseWorkloadRunner;
 import com.couchbase.workloads.WorkloadHelper;
@@ -45,18 +41,22 @@ public class JavaTester implements CouchbaseWorkloadRunner {
     private String logReplicationUrl;
     private Map<String, String> changeIdRevisions = new HashMap<String,String>();
     private Map<String, Long> changeIdTimestamps = new HashMap<String,Long>();
-    private MovingAverage movingAverage = new MovingAverage(100);
+    private Map<String, Map<String, Long>> changeIdDeviceTimings = new HashMap<String, Map<String,Long>>();
+    private int numFriends = 2;
 
     public static void usage() {
         System.out.println("JavaTester <options>");
         System.out.println("\t-workload <comma-delimited list of workloads>  *REQUIRED*");
         System.out.println("\t-workload_sync_url <url>");
         System.out.println("\t-log_sync_url <url>");
+        System.out.println("\t-min_delay <delay in ms>");
+        System.out.println("\t-num_friends <number of friends to tag in documents>");
     }
 
-    public JavaTester(String workloadReplicaitonUrl, String logReplicationUrl) {
+    public JavaTester(String workloadReplicaitonUrl, String logReplicationUrl, int numFriends) {
         this.workloadReplicaitonUrl = workloadReplicaitonUrl;
         this.logReplicationUrl = logReplicationUrl;
+        this.numFriends = numFriends;
     }
 
     public static void main(String[] args) throws Exception {
@@ -64,6 +64,8 @@ public class JavaTester implements CouchbaseWorkloadRunner {
         String startWorkloadString = null;
         String workloadSyncUrl = null;
         String logSyncUrl = null;
+        int minimumDelayArgument = 500;
+        int numFriendsArgument = 2;
 
         int i = 0;
         String arg = null;
@@ -82,6 +84,7 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             else if(arg.equals("-workload_sync_url")) {
                 if (i < args.length) {
                     workloadSyncUrl = args[i++];
+                    System.out.println("Workload Sync URL: " + workloadSyncUrl);
                 }
                 else {
                     System.err.println("-workload_sync_url requires a string argument");
@@ -91,9 +94,30 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             else if(arg.equals("-log_sync_url")) {
                 if (i < args.length) {
                     logSyncUrl = args[i++];
+                    System.out.println("Log Sync URL: " + logSyncUrl);
                 }
                 else {
                     System.err.println("-log_sync_url requires a string argument");
+                    System.exit(1);
+                }
+            }
+            else if(arg.equals("-min_delay")) {
+                if (i < args.length) {
+                    minimumDelayArgument = Integer.parseInt(args[i++]);
+                    System.out.println("Minimum Delay: " + minimumDelayArgument);
+                }
+                else {
+                    System.err.println("-min_delay requires an integer argument");
+                    System.exit(1);
+                }
+            }
+            else if(arg.equals("-num_friends")) {
+                if (i < args.length) {
+                    numFriendsArgument = Integer.parseInt(args[i++]);
+                    System.out.println("Number of Friends: " + numFriendsArgument);
+                }
+                else {
+                    System.err.println("-num_friends requires an integer argument");
                     System.exit(1);
                 }
             }
@@ -107,14 +131,15 @@ public class JavaTester implements CouchbaseWorkloadRunner {
         }
 
 
-        JavaTester tester = new JavaTester(workloadSyncUrl, logSyncUrl);
-        tester.run(startWorkloadString);
+        JavaTester tester = new JavaTester(workloadSyncUrl, logSyncUrl, numFriendsArgument);
+        tester.run(startWorkloadString, minimumDelayArgument);
     }
 
-    public void run(String startWorkloadString) throws Exception {
+    public void run(String startWorkloadString, int minimumDelay) throws Exception {
         List<String> startWorkloads = null;
         if(startWorkloadString != null) {
             LOG.debug(TAG, "Requested to start workload " + startWorkloadString);
+            System.out.println("Starting Workloads: " + startWorkloadString);
             startWorkloads = Arrays.asList(startWorkloadString.split(","));
         }
         else {
@@ -122,53 +147,9 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             System.exit(1);
         }
 
-
-        new Thread(new Runnable() {
-
-            public void run() {
-                try {
-
-                    String urlString = getWorkloadReplicationUrl();
-
-                    HttpClient httpClient = buildHttpClientFromUrl(urlString);
-                    CouchDbInstance couchDbInstance = new StdCouchDbInstance(httpClient);
-                    CouchDbConnector couchDbConnector = couchDbInstance.createConnector(getDatabaseNameFromUrl(urlString), false);
-
-                    DbInfo dbInfo = couchDbConnector.getDbInfo();
-                    long lastUpdateSeq = dbInfo.getUpdateSeq();
-
-                    ChangesCommand cmd = new ChangesCommand.Builder()
-                                                           .since(lastUpdateSeq)
-                                                           .includeDocs(false)
-                                                           .build();
-
-                    ChangesFeed feed = couchDbConnector.changesFeed(cmd);
-
-                    while (feed.isAlive()) {
-                        DocumentChange change = feed.next();
-                        String id = change.getId();
-                        String rev = change.getRevision();
-                        Long val = getAndRemoveDocumentWithIdAndRevision(id, rev);
-                        if(val != null) {
-                            long current = System.currentTimeMillis();
-                            long delta = current - val;
-                            movingAverage.newNum(delta);
-                            long avgValue = movingAverage.getAvg();
-                            if(avgValue > 0) {
-                                System.out.println("Average latency is " + movingAverage.getAvg());
-                            }
-                        }
-
-                    }
-
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    //ignore
-                }
-            }
-
-        }).start();
+        //create a changes feed monitor for the cloud
+        ChangesFeedMonitor cloudFeedMonitor = new ChangesFeedMonitor(this, getWorkloadReplicationUrl());
+        cloudFeedMonitor.start();
 
 
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
@@ -180,6 +161,7 @@ public class JavaTester implements CouchbaseWorkloadRunner {
 
         for (String nodeUrl : nodeUrls) {
 
+            //start the workloads on the node
             HttpClient httpClient = buildHttpClientFromUrl(nodeUrl);
             CouchDbInstance couchDbInstance = new StdCouchDbInstance(httpClient);
 
@@ -189,7 +171,12 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             }
             CouchDbConnector couchDbConnector = couchDbInstance.createConnector(dbName, true);
 
+            //start a process to follow changes feed on the node (do this after connector was created syncronously, no contention creating the db
+            ChangesFeedMonitor deviceFeedMonitor = new ChangesFeedMonitor(this, nodeUrl);
+            deviceFeedMonitor.start();
 
+
+            //now actually start the workloads
             for(String workloadName : startWorkloads) {
                 CouchbaseWorkload workload = WorkloadHelper.loadWorkload(workloadName);
                 workload.setCouchDbInstance(couchDbInstance);
@@ -197,6 +184,8 @@ public class JavaTester implements CouchbaseWorkloadRunner {
                 workload.setCouchbaseWorkloadRunner(this);
                 workload.addExtra(WorkloadHelper.EXTRA_WORKLOAD_DB, dbName);
                 workload.addExtra(WorkloadHelper.EXTRA_NODE_ID, nodeUrl);
+                workload.addExtra(WorkloadHelper.EXTRA_MINIMUM_DELAY, minimumDelay);
+                workload.addExtra(WorkloadHelper.EXTRA_NUM_FRIENDS, numFriends);
                 LOG.debug(TAG, "Starting workload " + workload.getName());
                 workload.start();
                 //add to our list
@@ -245,21 +234,55 @@ public class JavaTester implements CouchbaseWorkloadRunner {
             //if we were track older revision it will get overwritten
             changeIdRevisions.put(id, rev);
             changeIdTimestamps.put(id, currentTime);
+            changeIdDeviceTimings.put(id, new HashMap<String,Long>());
         }
     }
 
-    public Long getAndRemoveDocumentWithIdAndRevision(String id, String rev) {
-        Long result = null;
+    public void recordDeviceSeesDocumentWithIdAndRevision(String deviceId, String documentId, String revision) {
+        long currentTime = System.currentTimeMillis();
+        long createTime  = -1L;
+        Map<String,Long> deviceTimings = null;
+        String trackedRev = null;
+
         synchronized (this) {
-            //if the revision we see in the changes feed is the one we're looking for
-            //remove from both maps, return timestamp
-            String trackedRev = changeIdRevisions.get(id);
-            if((trackedRev != null) && (trackedRev.equals(rev))) {
-                changeIdRevisions.remove(id);
-                result = changeIdTimestamps.remove(id);
+            //first make sure this is the revision we're interested in
+            trackedRev = changeIdRevisions.get(documentId);
+            if((trackedRev != null) && (trackedRev.equals(revision))) {
+                deviceTimings = changeIdDeviceTimings.get(documentId);
+                if(deviceTimings != null) {
+                    deviceTimings.put(deviceId, currentTime);
+                }
+
+                //we expect to receive num_friends + 1 (for the cloud) entries
+                if(deviceTimings.size() == (numFriends + 1) ) {
+                    createTime = changeIdTimestamps.remove(documentId);
+
+                    //cleanup everything else associated with this key
+                    changeIdRevisions.remove(documentId);
+                    changeIdDeviceTimings.remove(documentId);
+
+                }
             }
         }
-        return result;
+
+        //now print out (after out of synchronized block)
+        if(createTime > -1L && deviceTimings != null) {
+            //first print the cloud time
+            Long cloudTime = deviceTimings.remove(getWorkloadReplicationUrl());
+            if(cloudTime == null) {
+                System.out.println("ERROR clould time is null");
+            }
+            System.out.print(documentId + ",");
+            System.out.print(cloudTime - createTime);
+            for (String deviceKey : deviceTimings.keySet()) {
+                Long deviceTime = deviceTimings.get(deviceKey);
+
+                System.out.print(",");
+                System.out.print(deviceTime - createTime);
+            }
+            System.out.println();
+        }
+
     }
 
     @Override
@@ -288,14 +311,18 @@ public class JavaTester implements CouchbaseWorkloadRunner {
     }
 
     @Override
-    public List<String> getRandomFriends(int count) {
-        //NOTE currently no attempt is made to avoid adding the same friend multiple times
+    public List<String> getRandomFriends(String self, int count) {
         List<String> result = new ArrayList<String>();
 
         Random r = new Random();
         while(result.size() < count) {
             int randomIndex = r.nextInt(nodeUrls.size());
-            result.add(nodeUrls.get(randomIndex));
+            String candidateFriend = nodeUrls.get(randomIndex);
+            //make sure friend is not self or already in the list
+            if(!candidateFriend.equals(self) && !result.contains(candidateFriend)) {
+                result.add(candidateFriend);
+            }
+
         }
 
         return result;

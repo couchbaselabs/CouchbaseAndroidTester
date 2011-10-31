@@ -18,10 +18,12 @@ public interface CouchbaseWorkloadRunner {
 
 	public void publishedWorkloadDocumentWithIdandRevision(String id, String rev);
 
+	public void recordDeviceSeesDocumentWithIdAndRevision(String url, String id, String rev);
+
 	public HttpClient buildHttpClientFromUrl(String url) throws MalformedURLException;
 
 	public String getDatabaseNameFromUrl(String url) throws MalformedURLException;
 
-	public List<String> getRandomFriends(int count);
+	public List<String> getRandomFriends(String self, int count);
 
 }

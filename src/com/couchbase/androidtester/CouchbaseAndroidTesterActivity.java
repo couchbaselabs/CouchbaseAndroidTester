@@ -301,6 +301,11 @@ public class CouchbaseAndroidTesterActivity extends Activity implements Couchbas
         throw new UnsupportedOperationException("Not supported on Android at this time");
     }
 
+    @Override
+    public void recordDeviceSeesDocumentWithIdAndRevision(String url,
+            String id, String rev) {
+        throw new UnsupportedOperationException("Not supported on Android at this time");
+    }
 
     @Override
     public HttpClient buildHttpClientFromUrl(String urlString) throws MalformedURLException {
@@ -328,7 +333,7 @@ public class CouchbaseAndroidTesterActivity extends Activity implements Couchbas
     }
 
     @Override
-    public List<String> getRandomFriends(int count) {
+    public List<String> getRandomFriends(String self, int count) {
         throw new UnsupportedOperationException("Not supported on Android at this time");
     }
 }

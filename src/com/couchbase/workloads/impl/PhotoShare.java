@@ -14,11 +14,22 @@ import com.couchbase.workloads.WorkloadHelper;
 
 public class PhotoShare extends CouchbaseWorkload {
 
+    private int minimumDelay = 500;
+    private int numFriends = 2;
+
     private final static Logger LOG = LoggerFactory
             .getLogger(PhotoShare.class);
 
     @Override
     protected String performWork() {
+
+        if(extras.containsKey(WorkloadHelper.EXTRA_MINIMUM_DELAY)) {
+            minimumDelay = (Integer)extras.get(WorkloadHelper.EXTRA_MINIMUM_DELAY);
+        }
+
+        if(extras.containsKey(WorkloadHelper.EXTRA_NUM_FRIENDS)) {
+            numFriends = (Integer)extras.get(WorkloadHelper.EXTRA_NUM_FRIENDS);
+        }
 
         int photosUploaded = 0;
         while(!thread.isCancelled()) {
@@ -45,7 +56,7 @@ public class PhotoShare extends CouchbaseWorkload {
             }
 
             try {
-                int delayBetweenPosts = 1000 * (500 + new Random().nextInt(500));
+                int delayBetweenPosts = 1000 * (minimumDelay + new Random().nextInt(minimumDelay));
                 Thread.sleep(delayBetweenPosts);
             } catch (InterruptedException e) {
                 //ignore
@@ -115,7 +126,7 @@ public class PhotoShare extends CouchbaseWorkload {
         result.put("mediaMetaData", media);
         result.put("motionData", motionData);
         result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
-        result.put("friends", workloadRunner.getRandomFriends(2));
+        result.put("friends", workloadRunner.getRandomFriends((String)extras.get(WorkloadHelper.EXTRA_NODE_ID), numFriends));
         return result;
     }
 

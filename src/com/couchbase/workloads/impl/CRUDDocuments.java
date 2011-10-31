@@ -12,11 +12,17 @@ import com.couchbase.workloads.WorkloadHelper;
 
 public class CRUDDocuments extends CouchbaseWorkload {
 
+    private int numFriends = 2;
+
     private final static Logger LOG = LoggerFactory
             .getLogger(CRUDDocuments.class);
 
 	@Override
 	protected String performWork() {
+
+        if(extras.containsKey(WorkloadHelper.EXTRA_NUM_FRIENDS)) {
+            numFriends = (Integer)extras.get(WorkloadHelper.EXTRA_NUM_FRIENDS);
+        }
 
 		int documentsCreated = 0;
 		while(!thread.isCancelled()) {
@@ -63,7 +69,7 @@ public class CRUDDocuments extends CouchbaseWorkload {
 		HashMap<String, Object> result = new HashMap<String, Object>();
 		result.put("type", "sample");
         result.put("author", extras.get(WorkloadHelper.EXTRA_NODE_ID));
-        result.put("friends", workloadRunner.getRandomFriends(2));
+        result.put("friends", workloadRunner.getRandomFriends((String)extras.get(WorkloadHelper.EXTRA_NODE_ID), numFriends));
 		return result;
 	}
 

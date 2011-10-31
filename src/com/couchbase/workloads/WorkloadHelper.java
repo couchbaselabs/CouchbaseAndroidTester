@@ -13,6 +13,8 @@ public class WorkloadHelper {
 
     public static final String EXTRA_WORKLOAD_DB = "WORKLOAD_DB";
     public static final String EXTRA_NODE_ID = "NODE_ID";
+    public static final String EXTRA_MINIMUM_DELAY = "MINIMUM_DELAY";
+    public static final String EXTRA_NUM_FRIENDS = "NUM_FRIENDS";
 
     public static final String DEFAULT_WORKLOAD_DB = "workload";
 
