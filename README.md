@@ -58,6 +58,27 @@ The simplest way to start workloads is by pressing the Start button from the wor
     
 NOTE: the single command-line argument accepted is a comma-delimited list of workloads to be run.  A list of CouchDB server URLs must be provided on standard input, 1 URL per line (see the couch_urls.txt file for an example of the format)
 
+### Output
+
+Workload Sync URL: http://127.0.0.1:5984/android-other
+Minimum Delay: 100
+Number of Friends: 5
+Starting Workloads: com.couchbase.workloads.impl.Calendar,com.couchbase.workloads.impl.ContinuousFriendFilterReplication
+1a1758da-c69a-4767-bde3-5ca16df832a8,69,1321,710,288,22,588
+1ee343e8-c7a4-40f4-96c3-eeacfbe45aa4,72,1535,1757,280,600,16
+76d288d5-d7af-4680-aa97-b0f79cd68359,168,10,1127,507,350,401
+8d912e56-e157-46fd-b722-c80df1d10a5e,750,1629,1913,1070,45,857
+9f5df4dc-004f-4592-b6b4-5f387b666022,62,1470,436,143,19,294
+129ea10c-e651-4dbf-b860-de019aa19432,974,26,1884,2179,1278,1115
+421b2dd8-c711-47b0-ae27-29cd6caf5ef7,322,1230,1853,644,28,454
+
+Any of the settings overridden on the command-line and the list of workloads that will be started are sent to standard output.
+
+Following that the output is comma-delimited with the following fields:
+<document id>, <sync time to cloud>, <sync time to friend 1> ... <sync time to friend n>
+
+The number of columns will be 2 + the number of friends tagged in each document.
+
 ## Provided Workloads
 
 - CRUD Documents  -  Create, Read, Update and Delete documents in sequence
