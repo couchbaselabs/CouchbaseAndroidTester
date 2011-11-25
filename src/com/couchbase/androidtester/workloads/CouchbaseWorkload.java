@@ -5,6 +5,9 @@ import org.ektorp.CouchDbInstance;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
+
+import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
 
 public abstract class CouchbaseWorkload {
 
@@ -81,7 +84,11 @@ public abstract class CouchbaseWorkload {
 
 		@Override
 		protected String doInBackground(Void... params) {
-			return performWork();
+		    long start = System.currentTimeMillis();
+			String result = performWork();
+			long end = System.currentTimeMillis();
+			Log.v(CouchbaseAndroidTesterActivity.TAG, "" + getName() + " completed in " + (end - start) + "ms");
+			return result;
 		}
 
 		@Override
