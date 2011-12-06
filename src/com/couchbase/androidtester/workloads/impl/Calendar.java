@@ -8,8 +8,7 @@ import com.couchbase.androidtester.workloads.CouchbaseWorkload;
 
 public class Calendar extends CouchbaseWorkload {
 
-    private static int numberOfEvents = 1000;
-    private static int delayBetweenPosts = 1000;
+    private static int numberOfEvents = 100;
 
     public Calendar() {
         indeterminate = false;
@@ -29,27 +28,12 @@ public class Calendar extends CouchbaseWorkload {
             couchDbConnector.create(document);
             calendarEventsCreated++;
 
-            //wait
-            try {
-                Thread.sleep(delayBetweenPosts);
-            } catch (InterruptedException e) {
-                //ignore
-            }
-
             //update the calendar item
             document = cancelEvent(document);
             couchDbConnector.update(document);
 
             progress++;
             task.publishWorkProgress("Processed Even " + calendarEventsCreated);
-
-
-            //wait some more
-            try {
-                Thread.sleep(delayBetweenPosts);
-            } catch (InterruptedException e) {
-                //ignore
-            }
 
         }
 
@@ -97,7 +81,7 @@ public class Calendar extends CouchbaseWorkload {
 
     @Override
     public String getName() {
-        return "Calendar Usage";
+        return "Calendar Events";
     }
 
 }

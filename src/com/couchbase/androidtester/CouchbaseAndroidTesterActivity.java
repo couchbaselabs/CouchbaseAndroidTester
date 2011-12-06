@@ -2,10 +2,12 @@ package com.couchbase.androidtester;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.DbAccessException;
+import org.ektorp.ReplicationCommand;
 import org.ektorp.android.http.AndroidHttpClient;
 import org.ektorp.android.util.EktorpAsyncTask;
 import org.ektorp.http.HttpClient;
@@ -14,10 +16,13 @@ import org.ektorp.impl.StdCouchDbInstance;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,6 +44,7 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 	public static final String TAG = "CouchbaseTester";
 
 	public static final String DEFAULT_WORKLOAD_DB = "workload";
+	public static final String DEFAULT_REPORT_DB = "reports";
 
 	/**
 	 * List of monitors
@@ -83,7 +89,17 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 	/**
 	 * CouchDbConnector of the default database
 	 */
-	private CouchDbConnector couchDbConnector;
+	private CouchDbConnector workloadConnector;
+
+	/**
+     * CouchDbConnector of the default database
+     */
+    private CouchDbConnector reportConnector;
+
+    /**
+     * Track when we started Couchbase
+     */
+    private long couchStartTime;
 
 	/**
 	 * Startup Progress Dialog
@@ -111,20 +127,12 @@ public class CouchbaseAndroidTesterActivity extends Activity {
         spec2.setIndicator("Workloads", res.getDrawable(R.drawable.tab_workload));
         tabs.addTab(spec2);
 
-        startupDialog = new ProgressDialog(this);
-        startupDialog.setCancelable(false);
-        startupDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        startupDialog.setTitle("Starting Couchbase");
-        startupDialog.show();
-
-        startCouch();
-
-		//now load the rest of the UI
+        //now load the rest of the UI
 
         monitors = MonitorHelper.loadMonitors();
         for (CouchbaseMonitor monitor : monitors) {
-			monitor.setContext(this);
-		}
+            monitor.setContext(this);
+        }
 
         monitorsListAdapter = new MonitorsListAdapter(this, monitors);
         monitorsListView = (ExpandableListView)findViewById(R.id.monitorListView);
@@ -132,7 +140,7 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 
         //default all monitor groups to be expanded
         for(int i=0; i < monitorsListAdapter.getGroupCount(); i++) {
-        	monitorsListView.expandGroup(i);
+            monitorsListView.expandGroup(i);
         }
 
         workloads = WorkloadHelper.loadWorkloads();
@@ -141,47 +149,100 @@ public class CouchbaseAndroidTesterActivity extends Activity {
         workloadsListView = (ListView)findViewById(R.id.workloadListView);
         workloadsListView.setAdapter(workloadsListAdapter);
 
+        //check to see if debugger is attached and warn user
+        if(android.os.Debug.isDebuggerConnected()) {
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setTitle("Debugger Attached");
+            alertDialog.setMessage("The application has detected that a debugger is attached.  This may affect the performance numbers calculated by this program.");
+            alertDialog.setButton("Ignore", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+
+                startupDialog = new ProgressDialog(CouchbaseAndroidTesterActivity.this);
+                startupDialog.setCancelable(false);
+                startupDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                startupDialog.setTitle("Starting Couchbase");
+                startupDialog.show();
+
+                //proceed to start couch
+                startCouch();
+            }});
+            alertDialog.setButton2("Quit", new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }});
+            alertDialog.show();
+        }
+        else {
+            startupDialog = new ProgressDialog(CouchbaseAndroidTesterActivity.this);
+            startupDialog.setCancelable(false);
+            startupDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            startupDialog.setTitle("Starting Couchbase");
+            startupDialog.show();
+
+            //proceed to start couch
+            startCouch();
+        }
+
     }
 
     @Override
     protected void onDestroy() {
-    	unbindService(couchServiceConnection);
+        if(couchServiceConnection != null) {
+            unbindService(couchServiceConnection);
+        }
     	super.onDestroy();
     }
 
 	protected void startCouch() {
 		CouchbaseMobile couch = new CouchbaseMobile(getBaseContext(), mDelegate);
+		couchStartTime = System.currentTimeMillis();
 		couchServiceConnection = couch.startCouchbase();
 	}
 
 	private final ICouchbaseDelegate mDelegate = new ICouchbaseDelegate() {
 		@Override
 		public void couchbaseStarted(String host, int port) {
+		    final long couchStartFinishTime = System.currentTimeMillis();
 
 			Log.v(TAG, "Couchbase has started");
 			HttpClient httpClient = new AndroidHttpClient.Builder().host(host).port(port).build();
 			couchDbInstance = new StdCouchDbInstance(httpClient);
 
 			//now create a default database for workloads to use
-			EktorpAsyncTask createDefaultDb = new EktorpAsyncTask() {
+			EktorpAsyncTask createDbs = new EktorpAsyncTask() {
 
                 @Override
                 protected void doInBackground() {
-                    couchDbConnector = couchDbInstance.createConnector(DEFAULT_WORKLOAD_DB, true);
+                    workloadConnector = couchDbInstance.createConnector(DEFAULT_WORKLOAD_DB, true);
+                    reportConnector = couchDbInstance.createConnector(DEFAULT_REPORT_DB, true);
                 }
 
                 @Override
                 protected void onDbAccessException(
                         DbAccessException dbAccessException) {
-                    Log.e(TAG, "Error Creating Default Workload Database", dbAccessException);
+                    Log.e(TAG, "Error Creating Database", dbAccessException);
                 }
 
                 @Override
                 protected void onSuccess() {
+                    //record the couch start time report
+                    Map<String,Object> couchStartTimeReport = TestReport.createTestReport(CouchbaseAndroidTesterActivity.this, "Couchbase Mobile Start Time", "couchbaseMobileStartTime", couchStartTime, couchStartFinishTime);
+                    reportConnector.create(couchStartTimeReport);
+
+                    //start a continuous push replication of test results to the cloud
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+                    ReplicationCommand pushReplicationCommand = new ReplicationCommand.Builder()
+                        .source(DEFAULT_REPORT_DB)
+                        .target(prefs.getString("report_sync_url", "http://couchdb2.couchbaseqe.com:5984/android-results"))
+                        .continuous(true)
+                        .build();
+                    couchDbInstance.replicate(pushReplicationCommand);
+
                     //iterate through all the workloads and give them reference to Couch
                     for (CouchbaseWorkload workload : workloads) {
                         workload.setCouchDbInstance(couchDbInstance);
-                        workload.setCouchDbConnector(couchDbConnector);
+                        workload.setCouchDbConnector(workloadConnector);
+                        workload.setReportConnector(reportConnector);
                         workload.setContext(CouchbaseAndroidTesterActivity.this);
                     }
 
@@ -209,7 +270,7 @@ public class CouchbaseAndroidTesterActivity extends Activity {
                 }
             };
 
-            createDefaultDb.execute();
+            createDbs.execute();
 
 		};
 

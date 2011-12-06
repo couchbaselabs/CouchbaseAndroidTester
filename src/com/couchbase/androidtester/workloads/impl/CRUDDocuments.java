@@ -12,7 +12,7 @@ import com.couchbase.androidtester.workloads.CouchbaseWorkload;
 
 public class CRUDDocuments extends CouchbaseWorkload {
 
-	private static int numberOfDocuments = 1000;
+	private static int numberOfDocuments = 100;
 
 	public CRUDDocuments() {
 		indeterminate = false;
@@ -74,7 +74,7 @@ public class CRUDDocuments extends CouchbaseWorkload {
 
 	@Override
 	public String getName() {
-		return "CRUD 1000 Documents";
+		return "CRUD Operations";
 	}
 
 }

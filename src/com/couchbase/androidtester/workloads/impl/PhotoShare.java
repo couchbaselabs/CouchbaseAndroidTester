@@ -14,8 +14,7 @@ import com.couchbase.androidtester.workloads.CouchbaseWorkload;
 
 public class PhotoShare extends CouchbaseWorkload {
 
-    private static int numberOfPhotos = 1000;
-    private static int delayBetweenPosts = 1000;
+    private static int numberOfPhotos = 100;
 
     public PhotoShare() {
         indeterminate = false;
@@ -48,12 +47,6 @@ public class PhotoShare extends CouchbaseWorkload {
                 task.publishWorkProgress("Uploaded Photo " + photosUploaded);
             } catch (IOException e) {
                 Log.e(CouchbaseAndroidTesterActivity.TAG, "Error reading attachment", e);
-            }
-
-            try {
-                Thread.sleep(delayBetweenPosts);
-            } catch (InterruptedException e) {
-                //ignore
             }
 
         }
@@ -124,7 +117,7 @@ public class PhotoShare extends CouchbaseWorkload {
 
     @Override
     public String getName() {
-        return "PhotoShare 1000 Documents";
+        return "Photo Share";
     }
 
 }

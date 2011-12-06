@@ -15,11 +15,11 @@ public class WorkloadHelper {
     private static List<String> getWorkloadClassNames() {
 		//eventually replace this with something scanning the apk for a certain subpackage
 		ArrayList<String> result = new ArrayList<String>();
-		result.add("com.couchbase.androidtester.workloads.impl.CreateDocuments");
+		//result.add("com.couchbase.androidtester.workloads.impl.CreateDocuments");
 		result.add("com.couchbase.androidtester.workloads.impl.CRUDDocuments");
-		result.add("com.couchbase.androidtester.workloads.impl.CancelPullReplication");
+		//result.add("com.couchbase.androidtester.workloads.impl.CancelPullReplication");
 		result.add("com.couchbase.androidtester.workloads.impl.PhotoShare");
-		result.add("com.couchbase.androidtester.workloads.impl.ContinuousReplication");
+		//result.add("com.couchbase.androidtester.workloads.impl.ContinuousReplication");
 		result.add("com.couchbase.androidtester.workloads.impl.Calendar");
 		return result;
     }

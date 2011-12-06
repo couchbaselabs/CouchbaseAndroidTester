@@ -1,5 +1,7 @@
 package com.couchbase.androidtester.workloads;
 
+import java.util.Map;
+
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 
@@ -8,12 +10,14 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.couchbase.androidtester.CouchbaseAndroidTesterActivity;
+import com.couchbase.androidtester.TestReport;
 
 public abstract class CouchbaseWorkload {
 
 	protected CouchbaseWorkloadRunner workloadRunner;
 	protected CouchDbInstance couchDbInstance;
 	protected CouchDbConnector couchDbConnector;
+	protected CouchDbConnector reportConnector;
 	protected CouchbaseWorkloadTask task = null;
 	protected Context context = null;
 	protected int progress = 0;
@@ -30,6 +34,10 @@ public abstract class CouchbaseWorkload {
 
 	public void setCouchDbConnector(CouchDbConnector couchDbConnector) {
 	    this.couchDbConnector = couchDbConnector;
+	}
+
+	public void setReportConnector(CouchDbConnector reportConnector) {
+	    this.reportConnector = reportConnector;
 	}
 
 	public void setContext(Context context) {
@@ -88,6 +96,8 @@ public abstract class CouchbaseWorkload {
 			String result = performWork();
 			long end = System.currentTimeMillis();
 			Log.v(CouchbaseAndroidTesterActivity.TAG, "" + getName() + " completed in " + (end - start) + "ms");
+			Map<String,Object> workloadReport = TestReport.createTestReport(context, getName(), getClass().getName(), start, end);
+			reportConnector.create(workloadReport);
 			return result;
 		}
 
