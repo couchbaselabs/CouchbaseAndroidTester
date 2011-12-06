@@ -9,6 +9,12 @@ import android.telephony.TelephonyManager;
 
 public class TestReport {
 
+    private static String couchbaseVersion = "unknown";
+
+    public static void setCouchbaseVersion(String couchbaseVersion) {
+        TestReport.couchbaseVersion = couchbaseVersion;
+    }
+
     public static Map<String, Object> newTestReport(Context context) {
         Map<String, Object> result = new HashMap<String, Object>();
 
@@ -35,6 +41,7 @@ public class TestReport {
         Map<String, Object> result = new HashMap<String, Object>();
 
         result.put("debug", android.os.Debug.isDebuggerConnected());
+        result.put("couchbase", couchbaseVersion);
 
         return result;
     }
@@ -47,7 +54,9 @@ public class TestReport {
         result.put("device", android.os.Build.DEVICE);
         result.put("model", android.os.Build.MODEL);
         result.put("product", android.os.Build.PRODUCT);
+        result.put("manufacturer", android.os.Build.MANUFACTURER);
         result.put("tags", android.os.Build.TAGS);
+        result.put("cpu_abi", android.os.Build.CPU_ABI);
 
         return result;
     }
@@ -70,6 +79,7 @@ public class TestReport {
     public static Map<String, Object> getTestReport(String name, String systemName, long start, long end) {
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("name", name);
+        result.put("systemName", systemName);
         result.put("start", start);
         result.put("end", end);
         result.put("duration", end - start);

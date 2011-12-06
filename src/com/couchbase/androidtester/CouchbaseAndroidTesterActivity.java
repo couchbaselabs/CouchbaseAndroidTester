@@ -195,6 +195,9 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 
 	protected void startCouch() {
 		CouchbaseMobile couch = new CouchbaseMobile(getBaseContext(), mDelegate);
+		String couchbaseVersion = couch.getVersion();
+		Log.v(TAG, "Couchbase Mobile version: " + couchbaseVersion);
+		TestReport.setCouchbaseVersion(couchbaseVersion);
 		couchStartTime = System.currentTimeMillis();
 		couchServiceConnection = couch.startCouchbase();
 	}
@@ -205,7 +208,7 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 		    final long couchStartFinishTime = System.currentTimeMillis();
 
 			Log.v(TAG, "Couchbase has started");
-			HttpClient httpClient = new AndroidHttpClient.Builder().host(host).port(port).build();
+			HttpClient httpClient = new AndroidHttpClient.Builder().host(host).port(port).socketTimeout(0).build();
 			couchDbInstance = new StdCouchDbInstance(httpClient);
 
 			//now create a default database for workloads to use
