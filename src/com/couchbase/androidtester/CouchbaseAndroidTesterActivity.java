@@ -1,5 +1,6 @@
 package com.couchbase.androidtester;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -195,6 +196,11 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 
 	protected void startCouch() {
 		CouchbaseMobile couch = new CouchbaseMobile(getBaseContext(), mDelegate);
+		try {
+            couch.copyIniFile("test.ini");
+        } catch (IOException e) {
+            Log.e(TAG, "Unable to install applicaiton config file", e);
+        }
 		String couchbaseVersion = couch.getVersion();
 		Log.v(TAG, "Couchbase Mobile version: " + couchbaseVersion);
 		TestReport.setCouchbaseVersion(couchbaseVersion);
@@ -216,6 +222,7 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 
                 @Override
                 protected void doInBackground() {
+                    couchDbInstance.deleteDatabase(DEFAULT_WORKLOAD_DB);
                     workloadConnector = couchDbInstance.createConnector(DEFAULT_WORKLOAD_DB, true);
                     reportConnector = couchDbInstance.createConnector(DEFAULT_REPORT_DB, true);
                 }
