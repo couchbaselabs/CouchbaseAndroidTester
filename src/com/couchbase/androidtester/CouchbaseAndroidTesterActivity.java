@@ -8,6 +8,7 @@ import java.util.Map;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.DbAccessException;
+import org.ektorp.DocumentNotFoundException;
 import org.ektorp.ReplicationCommand;
 import org.ektorp.android.http.AndroidHttpClient;
 import org.ektorp.android.util.EktorpAsyncTask;
@@ -222,7 +223,12 @@ public class CouchbaseAndroidTesterActivity extends Activity {
 
                 @Override
                 protected void doInBackground() {
-                    couchDbInstance.deleteDatabase(DEFAULT_WORKLOAD_DB);
+                    try {
+                        couchDbInstance.deleteDatabase(DEFAULT_WORKLOAD_DB);
+                    }
+                    catch(DocumentNotFoundException ignore) {
+                        //ignore if database does not exist
+                    }
                     workloadConnector = couchDbInstance.createConnector(DEFAULT_WORKLOAD_DB, true);
                     reportConnector = couchDbInstance.createConnector(DEFAULT_REPORT_DB, true);
                 }
